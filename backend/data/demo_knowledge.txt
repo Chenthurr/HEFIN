@@ -1,0 +1,19 @@
+HEFIN demo knowledge base
+
+SOURCE: WHO
+HbA1c reflects average blood glucose over roughly three months. An HbA1c level of 6.5% or higher is commonly used as a diagnostic threshold, but formal diagnosis requires clinical evaluation and appropriate confirmation.
+
+SOURCE: Clinical Guidelines
+An elevated HbA1c result should be interpreted with clinical context. Confirmatory testing, symptoms, repeat laboratory measurements, and other factors may be relevant before a diagnosis is made.
+
+SOURCE: PubMed
+Randomized trials of GLP-1 receptor agonists such as semaglutide have reported significant weight reduction in people with obesity or overweight, including non-diabetic populations. Gastrointestinal effects are among commonly reported adverse events.
+
+SOURCE: PubMed
+Clinical research continues to evaluate GLP-1/GIP combination therapies for metabolic outcomes.
+
+SOURCE: Insurance Policy Database
+Many health insurance plans provide a defined window to appeal a claim denial. The exact deadline varies by policy and jurisdiction. An appeal commonly includes the denial letter, supporting clinical documentation, and a written statement explaining medical necessity.
+
+SOURCE: Insurance Policy Database
+When an internal insurance appeal is denied, an external review process may be available depending on the plan and jurisdiction. The policy documents and insurer should be checked for the applicable procedure and deadline.
