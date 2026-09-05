@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Fraunces";
+  src: local("Fraunces");
+  font-display: swap;
+}
+
+:root {
+  --background: #0b1220;
+  --surface: #101a2c;
+  --surface-2: #16233a;
+  --foreground: #f2f0e9;
+  --muted: #7c8a99;
+  --border: #223047;
+  --accent-teal: #4fd1c5;
+  --accent-amber: #e8a33d;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+::selection { background: rgba(79,209,197,.25); }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
