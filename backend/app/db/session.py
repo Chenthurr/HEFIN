@@ -7,7 +7,23 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-engine = create_async_engine(settings.database_url, echo=settings.debug, future=True)
+
+def _async_database_url(url: str) -> str:
+    """Ensure Render/Postgres URLs use SQLAlchemy's asyncpg driver."""
+    if url.startswith("postgresql+asyncpg://"):
+        return url
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
+    return url
+
+
+engine = create_async_engine(
+    _async_database_url(settings.database_url),
+    echo=settings.debug,
+    future=True,
+)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine, class_=AsyncSession, expire_on_commit=False
