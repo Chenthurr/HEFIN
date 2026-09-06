@@ -20,6 +20,24 @@ class QdrantRetriever:
         self.client = AsyncQdrantClient(url=settings.qdrant_url)
         self.collection = settings.qdrant_collection
 
+    async def ensure_collection(self, vector_size: int = 384) -> None:
+        """Create the configured collection when the knowledge base is first seeded."""
+        try:
+            collections = await self.client.get_collections()
+            names = {item.name for item in collections.collections}
+            if self.collection not in names:
+                await self.client.create_collection(
+                    collection_name=self.collection,
+                    vectors_config=models.VectorParams(
+                        size=vector_size,
+                        distance=models.Distance.COSINE,
+                    ),
+                )
+        except Exception:
+            # Startup must not depend on Qdrant being available; ingestion will
+            # surface a real configuration/connectivity error when requested.
+            return
+
     async def search(
         self,
         query_vector: list[float],
@@ -46,8 +64,7 @@ class QdrantRetriever:
                 with_payload=True,
             )
         except Exception:
-            # A missing/unavailable vector store should degrade gracefully for
-            # health checks and the MVP UI rather than crash application import.
+            # A missing/unavailable vector store should not crash the API.
             return []
 
         chunks: list[RetrievedChunk] = []
