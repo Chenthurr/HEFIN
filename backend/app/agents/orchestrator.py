@@ -24,6 +24,23 @@ COMMON_HEALTH = {
     "allergy": ("Allergies", "Avoiding a known trigger is the most useful first step. For mild allergy symptoms, appropriate antihistamines or other over-the-counter treatments may help when used according to the label. Swelling of the lips, tongue, or throat, trouble breathing, faintness, or rapidly worsening symptoms can indicate a severe allergic reaction and require emergency help."),
 }
 
+COMBINATION_GUIDANCE = [
+    (("chest pain", "pressure in chest", "tightness in chest"),
+     ("Chest pain needs careful assessment", "Chest pain can have many causes and some are emergencies. Do not rely on a chatbot to determine the cause. If the pain is severe, new, persistent, or comes with shortness of breath, sweating, fainting, nausea, or pain spreading to the arm, jaw, back, or shoulder, seek emergency medical care now.")),
+    (("shortness of breath", "difficulty breathing", "trouble breathing", "can't breathe", "cannot breathe"),
+     ("Breathing difficulty needs attention", "New or significant difficulty breathing should not be diagnosed online. Sit upright and avoid exertion while arranging medical assessment. Seek emergency help if breathing is severe, worsening, associated with chest pain, blue/grey lips, confusion, fainting, or inability to speak normally.")),
+    (("fever", "cough", "body ache"),
+     ("Fever + cough + body aches", "This combination can occur with respiratory infections such as influenza or COVID-19, but symptoms alone cannot confirm the cause. Rest, drink fluids, monitor your symptoms, and reduce close contact with others while unwell. Consider appropriate testing when relevant. Seek urgent care for breathing difficulty, chest pain, confusion, severe weakness, or dehydration.")),
+    (("fever", "cough", "sore throat"),
+     ("Fever + cough + sore throat", "These symptoms are commonly seen with respiratory infections, but they can have different causes. Rest, fluids, warm drinks, and avoiding smoke may help. Consider testing when appropriate. Seek medical assessment if symptoms are severe, persistent, worsening, or accompanied by breathing difficulty, chest pain, confusion, or dehydration.")),
+    (("fever", "vomiting", "diarrhea"),
+     ("Fever + vomiting + diarrhea", "An infection can cause this combination, but other causes are possible. Focus on small, frequent amounts of fluid and electrolytes and eat as tolerated. Seek medical care for severe dehydration, blood or black stool, severe abdominal pain, persistent vomiting, confusion, or worsening symptoms.")),
+    (("headache", "stiff neck"),
+     ("Headache + stiff neck", "A headache with a stiff neck can sometimes signal a serious illness. If this is new or severe, especially with fever, confusion, rash, vomiting, light sensitivity, weakness, or reduced consciousness, seek urgent medical assessment rather than relying on self-care advice.")),
+    (("dizziness", "fainting"),
+     ("Dizziness + fainting", "Fainting or near-fainting can have several causes. Sit or lie down somewhere safe and avoid driving. Seek urgent medical assessment if fainting is new, recurrent, occurs during exercise, follows chest pain or palpitations, causes injury, or is accompanied by weakness, confusion, severe headache, or breathing difficulty.")),
+]
+
 def classify_intent(state: OrchestratorState) -> OrchestratorState:
     query = state["query"].lower()
     if any(k in query for k in ["claim", "insurance", "premium", "benefit"]): route = AgentRoute.FINANCE
@@ -32,6 +49,11 @@ def classify_intent(state: OrchestratorState) -> OrchestratorState:
     return {**state, "route": route.value}
 
 def _common_health_answer(query: str) -> str | None:
+    q = query.lower()
+    for required_terms, (title, tips) in COMBINATION_GUIDANCE:
+        if all(term in q for term in required_terms):
+            return f"**{title} — general guidance**\n\n{tips}\n\nThis is general health information, not a diagnosis or personalised treatment plan."
+
     terms = {
         "cold": ["cold", "common cold"], "flu": ["flu", "influenza"], "fever": ["fever", "temperature"],
         "cough": ["cough"], "headache": ["headache", "migraine"], "diarrhea": ["diarrhea", "loose stool"],
@@ -39,7 +61,6 @@ def _common_health_answer(query: str) -> str | None:
         "hypertension": ["high blood pressure", "hypertension"], "asthma": ["asthma", "wheezing"],
         "allergy": ["allergy", "allergies", "hay fever"],
     }
-    q = query.lower()
     for key, matches in terms.items():
         if any(term in q for term in matches):
             name, tips = COMMON_HEALTH[key]
@@ -52,7 +73,7 @@ async def _rag_answer(state: OrchestratorState, source_filter: str | None = None
         fallback = _common_health_answer(state["query"])
         if fallback:
             return {**state, "answer": fallback, "citations": ["HEFIN basic health guidance"]}
-        return {**state, "answer": "I couldn't find grounded sources for that yet — the knowledge base may not be seeded for this topic. Try asking about common cold, flu, fever, cough, headache, diarrhea, constipation, diabetes, high blood pressure, asthma, or allergies.", "citations": []}
+        return {**state, "answer": "I couldn't find grounded sources for that yet — the knowledge base may not be seeded for this topic. Try asking about common cold, flu, fever, cough, headache, diarrhea, constipation, diabetes, high blood pressure, asthma, or allergies, or describe a combination of symptoms and how long you have had them.", "citations": []}
     context = "\n\n".join(f"[{c.source}] {c.text}" for c in chunks)
     prompt = ("You are HEFIN, an evidence-grounded healthcare information assistant. Answer ONLY from the supplied context. Never invent facts, sources, numbers, diagnoses, or prescriptions. Keep the answer concise and patient-friendly. Give general educational information and practical low-risk self-care tips when supported by the context. Clearly flag symptoms that need urgent or emergency care. Do not tell the user to start, stop, or change prescription medicines. Answer in the requested language. Cite supplied source names where useful.\n\n" f"Context:\n{context}\n\nQuestion: {state['query']}\n\nAnswer:")
     answer = await model_router.generate(prompt, complexity=TaskComplexity.MODERATE)
