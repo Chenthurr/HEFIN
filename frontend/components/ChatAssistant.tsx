@@ -7,7 +7,7 @@ type Message = { id: string; role: "user" | "assistant"; content: string; route?
 const suggestions = ["What does an elevated HbA1c mean?", "Any recent trials on GLP-1 for weight loss?", "How do I file an insurance claim appeal?", "Do I have diabetes?"];
 const routeLabels: Record<string, string> = { medical: "Medical Agent", research: "Research Agent", finance: "Finance Agent", safety_gate: "Safety Gate — Section 19" };
 
-export default function ChatAssistant({ token }: { token: string }) {
+export default function ChatAssistant() {
   const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "assistant", content: "Hi — ask me a health, research, or insurance question. I’ll retrieve grounded evidence, show the agent that handled it, and cite the sources used.", route: "medical", citations: [] }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -18,7 +18,7 @@ export default function ChatAssistant({ token }: { token: string }) {
     const value = text.trim(); if (!value || busy) return;
     setInput(""); setMessages((m) => [...m, { id: crypto.randomUUID(), role: "user", content: value }]); setBusy(true);
     try {
-      const result = await apiFetch<{ answer: string; citations: string[]; route: string }>("/api/v1/chat", { method: "POST", token, body: JSON.stringify({ message: value }) });
+      const result = await apiFetch<{ answer: string; citations: string[]; route: string }>("/api/v1/chat", { method: "POST", body: JSON.stringify({ message: value }) });
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: result.answer, route: result.route, citations: result.citations }]);
     } catch (error) {
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: error instanceof Error ? error.message : "The assistant could not complete that request.", route: "safety_gate", citations: [] }]);
