@@ -1,4 +1,4 @@
-name: Auto Commit
+name: Repository Maintenance
 
 on:
   schedule:
@@ -11,21 +11,29 @@ permissions:
   contents: write
 
 jobs:
-  auto-commit:
+  maintenance:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make a change
+      - name: Record maintenance run
         run: |
           mkdir -p .github
-          echo "Last auto-commit: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .github/last-auto-commit.txt
+          {
+            echo "# Automated Maintenance"
+            echo
+            echo "This file records scheduled repository-maintenance runs."
+            echo
+            echo "- Last run (UTC): $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "- Workflow run: $GITHUB_RUN_NUMBER"
+            echo "- Commit: $GITHUB_SHA"
+          } > .github/maintenance-status.md
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/last-auto-commit.txt
-          git diff --cached --quiet || git commit -m "chore: automated commit"
+          git add .github/maintenance-status.md
+          git diff --cached --quiet || git commit -m "chore: update maintenance status"
           git push
